@@ -29,7 +29,15 @@ form.addEventListener('submit', function (e) {
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success') {
-                alert('RSVP submitted!');
+                const gif = document.getElementById('explosionGif');
+                gif.src = ''; // Unload the image
+                void gif.offsetWidth; // Force reflow to allow restarting
+                gif.src = 'images/explosion.gif'; // Set it back again
+
+                form.style.opacity = '0';
+                form.style.pointerEvents = 'none';
+                // Show the success message
+                successMessage.style.display = 'block';
                 form.reset();
             } else {
                 alert('Something went wrong. Try again.');

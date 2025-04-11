@@ -1,0 +1,16 @@
+<svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Shadow Layer -->
+    <rect x="5" y="10" rx="15" ry="15" width="250" height="50" fill="#2d263a"/>
+
+    <!-- Main Panel -->
+    <rect x="0" y="0" rx="15" ry="15" width="250" height="50" fill="#f68bae" stroke="#000" stroke-width="1"/>
+
+    <!-- Top-left circles -->
+    <circle cx="15" cy="15" r="3" fill="#eab308" />
+    <circle cx="25" cy="15" r="3" fill="#eab308" />
+    <circle cx="35" cy="15" r="3" fill="#eab308" />
+
+    <!-- Star Icon -->
+    <polygon points="240,5 243,15 253,15 245,20 248,30 240,24 232,30 235,20 227,15 237,15"
+             fill="#facc15" />
+</svg>
