@@ -3,15 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Wedding RSVP</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
-    .container { max-width: 600px; padding: 20px; margin: auto; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
-    label { display: block; margin-top: 15px; font-weight: bold; }
-    input[type="text"], input[type="email"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    .guest-input { margin-top: 10px; }
-    #addGuestBtn { margin-top: 10px; padding: 6px 12px; }
-    button[type="submit"] { margin-top: 20px; padding: 10px 15px; background-color: #007bff; border: none; color: white; font-size: 16px; cursor: pointer; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
@@ -35,54 +27,7 @@
   </form>
 </div>
 
-<script>
-  const form = document.getElementById('rsvpForm');
-  const addGuestBtn = document.getElementById('addGuestBtn');
-  const guestsDiv = document.getElementById('guests');
-
-  addGuestBtn.addEventListener('click', function () {
-    const guestInput = document.createElement('div');
-    guestInput.classList.add('guest-input');
-    guestInput.innerHTML = '<input type="text" name="guest[]" placeholder="Guest Name">';
-    guestsDiv.appendChild(guestInput);
-  });
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const guestElements = document.querySelectorAll('input[name="guest[]"]');
-    const guests = Array.from(guestElements)
-            .map(g => g.value.trim())
-            .filter(g => g.length > 0);
-
-    // REPLACE THIS with your actual Apps Script deployment URL
-    const endpoint = 'https://script.google.com/macros/s/AKfycbzfpv-x1cXy3zMSZXJJx1_A-N3nyJXdnB_m6JJ9M4cZZofRuQ0a083XDUcsHPQyw851/exec';
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('email', email);
-    guests.forEach((g, i) => formData.append(`guest[${i}]`, g));
-
-    fetch(endpoint, {
-      method: 'POST',
-      body: formData
-    })
-            .then(res => res.json())
-            .then(data => {
-              if (data.status === 'success') {
-                alert('RSVP submitted!');
-                form.reset();
-              } else {
-                alert('Something went wrong. Try again.');
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              alert('Error submitting form.');
-            });
-  });
-</script>
+<script src="formHandler.js"></script>
+<script src="guestHandler.js"></script>
 </body>
 </html>
