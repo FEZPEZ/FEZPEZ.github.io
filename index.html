@@ -1,7 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing GIFs</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+        .gif {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            animation: bounce linear infinite;
+        }
+        #speedUpBtn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div id="speedUpBtn">Speed Up</div>
+
+    <img src="gifs/gif1.gif" class="gif" id="gif1">
+    <img src="gifs/gif2.gif" class="gif" id="gif2">
+    <img src="gifs/gif3.gif" class="gif" id="gif3">
+    <img src="gifs/gif4.gif" class="gif" id="gif4">
+    <img src="gifs/gif5.gif" class="gif" id="gif5">
+
+    <script>
+        const gifs = document.querySelectorAll('.gif');
+        const speedUpButton = document.getElementById('speedUpBtn');
+        let speed = 5; // Initial speed for gifs
+        let gifPositions = [];
+
+        // Store initial positions and velocities for gifs
+        gifs.forEach((gif, index) => {
+            gifPositions[index] = {
+                x: Math.random() * (window.innerWidth - 100),
+                y: Math.random() * (window.innerHeight - 100),
+                vx: Math.random() * 2 + 2,  // Random initial speed in x direction
+                vy: Math.random() * 2 + 2   // Random initial speed in y direction
+            };
+            gif.style.left = gifPositions[index].x + 'px';
+            gif.style.top = gifPositions[index].y + 'px';
+        });
+
+        // Function to update the positions of the gifs
+        function updatePositions() {
+            gifs.forEach((gif, index) => {
+                let pos = gifPositions[index];
+
+                // Update positions
+                pos.x += pos.vx * speed;
+                pos.y += pos.vy * speed;
+
+                // Check for collisions with borders and reverse direction
+                if (pos.x <= 0 || pos.x >= window.innerWidth - 100) {
+                    pos.vx = -pos.vx;
+                }
+                if (pos.y <= 0 || pos.y >= window.innerHeight - 100) {
+                    pos.vy = -pos.vy;
+                }
+
+                // Apply the new position to the gif
+                gif.style.left = pos.x + 'px';
+                gif.style.top = pos.y + 'px';
+            });
+        }
+
+        // Function to speed up the gifs
+        speedUpButton.addEventListener('click', () => {
+            speed += 1; // Increase speed
+        });
+
+        // Animation loop
+        function animate() {
+            updatePositions();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
 </body>
 </html>
