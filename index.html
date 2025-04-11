@@ -2,77 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Model Duplication</title>
+  <title>Wedding RSVP</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
+    .container { max-width: 600px; padding: 20px; margin: auto; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input[type="text"], input[type="email"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    .guest-input { margin-top: 10px; }
+    #addGuestBtn { margin-top: 10px; padding: 6px 12px; }
+    button[type="submit"] { margin-top: 20px; padding: 10px 15px; background-color: #007bff; border: none; color: white; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
-<script type="module">
-  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js';
-  import { OBJLoader } from 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/loaders/OBJLoader.js';
+<div class="container">
+  <h2>Wedding RSVP</h2>
+  <form id="rsvpForm">
+    <label for="name">Your Full Name</label>
+    <input type="text" id="name" name="name" required>
 
-  let scene, camera, renderer, models = [];
-  const NUM_MODELS = 30;
+    <label for="email">Your Email</label>
+    <input type="email" id="email" name="email" required>
 
-  init();
+    <div id="guests">
+      <label>Additional Guests</label>
+      <div class="guest-input">
+        <input type="text" name="guest[]" placeholder="Guest Name">
+      </div>
+    </div>
+    <button type="button" id="addGuestBtn">Add Another Guest</button>
 
-  function init() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.z = 10;
+    <button type="submit">Submit RSVP</button>
+  </form>
+</div>
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+<script>
+  const form = document.getElementById('rsvpForm');
+  const addGuestBtn = document.getElementById('addGuestBtn');
+  const guestsDiv = document.getElementById('guests');
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
-    scene.add(light);
+  addGuestBtn.addEventListener('click', function () {
+    const guestInput = document.createElement('div');
+    guestInput.classList.add('guest-input');
+    guestInput.innerHTML = '<input type="text" name="guest[]" placeholder="Guest Name">';
+    guestsDiv.appendChild(guestInput);
+  });
 
-    const loader = new OBJLoader();
-    const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('3d-models/kirby_star_clusters.png');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
 
-    loader.load('3d-models/CerealModel.obj', (obj) => {
-      obj.traverse(child => {
-        if (child.isMesh) {
-          child.material = new THREE.MeshStandardMaterial({ map: texture });
-        }
-      });
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const guestElements = document.querySelectorAll('input[name="guest[]"]');
+    const guests = Array.from(guestElements)
+            .map(g => g.value.trim())
+            .filter(g => g.length > 0);
 
-      for (let i = 0; i < NUM_MODELS; i++) {
-        const clone = obj.clone();
-        clone.position.set(
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20,
-          (Math.random() - 0.5) * 20
-        );
-        const scale = Math.random() * 0.5 + 0.2;
-        clone.scale.set(scale, scale, scale);
-        models.push(clone);
-        scene.add(clone);
-      }
+    // REPLACE THIS with your actual Apps Script deployment URL
+    const endpoint = 'https://script.google.com/macros/s/AKfycbzfpv-x1cXy3zMSZXJJx1_A-N3nyJXdnB_m6JJ9M4cZZofRuQ0a083XDUcsHPQyw851/exec';
 
-      animate();
-    });
-  }
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('email', email);
+    guests.forEach((g, i) => formData.append(`guest[${i}]`, g));
 
-  function animate() {
-    requestAnimationFrame(animate);
-    models.forEach(model => {
-      model.rotation.y += 0.01;
-    });
-    renderer.render(scene, camera);
-  }
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    fetch(endpoint, {
+      method: 'POST',
+      body: formData
+    })
+            .then(res => res.json())
+            .then(data => {
+              if (data.status === 'success') {
+                alert('RSVP submitted!');
+                form.reset();
+              } else {
+                alert('Something went wrong. Try again.');
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              alert('Error submitting form.');
+            });
   });
 </script>
-
 </body>
 </html>
