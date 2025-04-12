@@ -152,3 +152,33 @@ label {
     z-index: 1;
 }
 
+@media (max-width: 600px) {
+    body {
+        margin: 20px;
+        font-size: 10px;
+    }
+
+    form {
+        margin: 30px auto;
+        padding: 0 10px;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+        font-size: 14px;
+        padding: 6px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .explosion-text {
+        font-size: 14px;
+    }
+
+    #explosionGif {
+        max-width: 200px;
+    }
+}
