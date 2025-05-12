@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
             offset = 0; // reset to start for loop
         }
 
-        document.body.style.backgroundPosition = `${offset}px ${offset}px`;
+        document.body.style.backgroundPosition = `${-offset}px ${-offset}px`;
         requestAnimationFrame(scrollBackground);
     }
 

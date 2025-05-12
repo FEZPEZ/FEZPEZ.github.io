@@ -10,13 +10,13 @@ form.addEventListener('submit', function (e) {
         .map(g => g.value.trim())
         .filter(g => g.length > 0);
 
-    const endpoint = 'https://script.google.com/macros/s/AKfycbzfpv-x1cXy3zMSZXJJx1_A-N3nyJXdnB_m6JJ9M4cZZofRuQ0a083XDUcsHPQyw851/exec';
-
     const payload = {
         name,
         email,
         guests
     };
+
+    const endpoint = 'https://script.google.com/macros/s/AKfycbzfpv-x1cXy3zMSZXJJx1_A-N3nyJXdnB_m6JJ9M4cZZofRuQ0a083XDUcsHPQyw851/exec';
 
     fetch(endpoint, {
         redirect: "follow",
@@ -32,7 +32,7 @@ form.addEventListener('submit', function (e) {
                 const gif = document.getElementById('explosionGif');
                 gif.src = ''; // Unload the image
                 void gif.offsetWidth; // Force reflow to allow restarting
-                gif.src = 'images/explosion.gif'; // Set it back again
+                gif.src = 'images/explosion(noloop).gif'; // Set it back again
 
                 form.style.opacity = '0';
                 form.style.pointerEvents = 'none';

@@ -1,47 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-  <title>Wedding RSVP</title>
-  <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <title>Card Drag and Drop</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container">
-  <h1 id="heading1">Nathan and Hannah's</h1>
-  <h2 id="heading2">Wedding RSVP</h2>
-  <form id="rsvpForm">
-    <label for="name">Your Full Name</label>
-    <input type="text" id="name" name="name" required placeholder="Name">
-    <label for="email">Your Email</label>
-    <input type="email" id="email" name="email" required placeholder="Email">
-
-    <div id="guests">
-      <label>Additional Guests</label>
-      <div class="guest-input">
-        <input type="text" name="guest[]" placeholder="Guest Name">
-      </div>
-    </div>
-    <button type="button" id="addGuestBtn">Add Another Guest</button>
-
-    <button type="submit">Submit RSVP</button>
-  </form>
+<div id="grid-container">
+    <div id="grid"></div>
+</div>
+<div id="carousel-container">
+    <div id="carousel"></div>
 </div>
 
-<div id="warpStar"></div>
-
-<div id="successMessage" style="display: none;">
-  <div class="explosion-container">
-    <h2 class="explosion-text">You're a real bridge raiser!</h2>
-    <img id="explosionGif" src="images/explosion.gif" alt="Explosion" />
-  </div>
-</div>
-
-<script src="formHandler.js"></script>
-<script src="guestHandler.js"></script>
-<script src="colorTitleEffect.js"></script>
-<script src="warpStar.js"></script>
-<script src="backgroundFallingEffect.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
