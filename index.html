@@ -3,158 +3,59 @@
 <head>
     <meta charset="UTF-8" />
     <title>Wedding Potluck Signup</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 2rem;
-            max-width: 600px;
-            margin: auto;
-        }
-
-        label {
-            display: block;
-            margin-top: 1em;
-        }
-
-        select, input[type="text"], input[type="email"], input[type="number"] {
-            width: 100%;
-            padding: 0.5em;
-            margin-top: 0.3em;
-        }
-
-        .submit-btn {
-            margin-top: 2em;
-            padding: 0.7em 1.5em;
-            font-size: 1em;
-        }
-
-        option[data-color="green"] {
-            background-color: #d4edda;
-        }
-        option[data-color="red"] {
-            background-color: #f8d7da;
-        }
-        option[data-color="yellow"] {
-            background-color: #fff3cd;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<h1>Wedding Potluck Signup</h1>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+<div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-xl">
+    <h1 class="text-2xl font-semibold mb-6 text-center">Wedding Potluck Signup</h1>
 
-<form id="dish-form">
-    <label>
-        Your Name
-        <input type="text" name="person" required />
-    </label>
+    <form id="dish-form" class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium mb-1">Your Name</label>
+            <input type="text" name="person" required class="w-full border rounded-md p-2" />
+        </div>
 
-    <label>
-        Your Email
-        <input type="email" name="email" required />
-    </label>
+        <div>
+            <label class="block text-sm font-medium mb-1">Your Email</label>
+            <input type="email" name="email" required class="w-full border rounded-md p-2" />
+        </div>
 
-    <label>
-        Dish Name
-        <input type="text" name="dish" required />
-    </label>
+        <div>
+            <label class="block text-sm font-medium mb-1">Dish Name</label>
+            <input type="text" name="dish" required class="w-full border rounded-md p-2" />
+        </div>
 
-    <label>
-        Category
-        <select name="category" id="category-select" required>
-            <option disabled selected>Loading categories...</option>
-        </select>
-    </label>
+        <div>
+            <!-- inside your form -->
+            <label class="block text-sm font-medium mb-1">Category</label>
+            <div id="category-buttons" class="space-y-2 mb-4"></div>
+            <input type="hidden" name="category" id="category-hidden" required />
 
-    <label>
-        Servings
-        <input type="number" name="servings" min="1" required />
-    </label>
+        </div>
 
-    <label>
-        Gluten Free?
-        <input type="checkbox" name="gf" />
-    </label>
+        <div>
+            <label class="block text-sm font-medium mb-1">Servings</label>
+            <input type="number" name="servings" min="1" required class="w-full border rounded-md p-2" />
+        </div>
 
-    <label>
-        Vegan?
-        <input type="checkbox" name="vegan" />
-    </label>
+        <div class="flex items-center space-x-2">
+            <input type="checkbox" name="gf" id="gf" class="h-4 w-4" />
+            <label for="gf" class="text-sm">Gluten Free?</label>
+        </div>
 
-    <button type="submit" class="submit-btn">Submit Dish</button>
-</form>
+        <div class="flex items-center space-x-2">
+            <input type="checkbox" name="vegan" id="vegan" class="h-4 w-4" />
+            <label for="vegan" class="text-sm">Vegan?</label>
+        </div>
 
-<div id="status" style="margin-top:2em;"></div>
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Submit Dish
+        </button>
 
-<script>
-    const form = document.getElementById('dish-form');
-    const categorySelect = document.getElementById('category-select');
-    const statusDiv = document.getElementById('status');
+        <div id="status" class="text-center mt-4 text-sm text-gray-700"></div>
+    </form>
+</div>
 
-    const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbz1zoU2bDG83YhjqooWrDr4DNgfAN3TvVQP6PAuOB8IvIifpgrOASmwyV05CrYi-qBb/exec'; // Replace with your deployed Apps Script URL
-
-    async function loadCategoryData() {
-        try {
-            const res = await fetch(ENDPOINT_URL);
-            const data = await res.json(); // { categories: [{ name, idealServings, currentServings }], timestamp }
-
-            categorySelect.innerHTML = '';
-
-            data.categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.name;
-                option.textContent = `${cat.name} (${cat.currentServings}/${cat.idealServings})`;
-
-                const ratio = cat.currentServings / cat.idealServings;
-                let color = 'green';
-                if (ratio >= 1.1) color = 'red';
-                else if (ratio >= 0.8) color = 'yellow';
-                option.setAttribute('data-color', color);
-
-                categorySelect.appendChild(option);
-            });
-        } catch (err) {
-            console.error('Failed to load category metadata:', err);
-            categorySelect.innerHTML = '<option disabled>Error loading categories</option>';
-        }
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const payload = {
-            timestamp: new Date().toISOString(),
-            category: formData.get('category'),
-            dish: formData.get('dish'),
-            person: formData.get('person'),
-            email: formData.get('email'),
-            servings: parseInt(formData.get('servings')),
-            gf: formData.get('gf') ? true : false,
-            vegan: formData.get('vegan') ? true : false
-        };
-
-        try {
-            const res = await fetch(ENDPOINT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (res.ok) {
-                statusDiv.textContent = 'Submission successful! Thank you.';
-                form.reset();
-                await loadCategoryData();
-            } else {
-                statusDiv.textContent = 'Error submitting. Please try again.';
-            }
-        } catch (err) {
-            console.error('Submit failed:', err);
-            statusDiv.textContent = 'Network error. Try again later.';
-        }
-    });
-
-    loadCategoryData();
-</script>
+<script src="formHandler.js"></script>
 </body>
 </html>
