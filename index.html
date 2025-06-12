@@ -1,19 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Card Drag and Drop</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <title>Wedding Potluck Signup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 1em;
+        }
+
+        select, input[type="text"], input[type="email"], input[type="number"] {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.3em;
+        }
+
+        .submit-btn {
+            margin-top: 2em;
+            padding: 0.7em 1.5em;
+            font-size: 1em;
+        }
+
+        option[data-color="green"] {
+            background-color: #d4edda;
+        }
+        option[data-color="red"] {
+            background-color: #f8d7da;
+        }
+        option[data-color="yellow"] {
+            background-color: #fff3cd;
+        }
+    </style>
 </head>
 <body>
-<div id="grid-container">
-    <div id="grid"></div>
-</div>
-<div id="carousel-container">
-    <div id="carousel"></div>
-</div>
+<h1>Wedding Potluck Signup</h1>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script src="script.js"></script>
+<form id="dish-form">
+    <label>
+        Your Name
+        <input type="text" name="person" required />
+    </label>
+
+    <label>
+        Your Email
+        <input type="email" name="email" required />
+    </label>
+
+    <label>
+        Dish Name
+        <input type="text" name="dish" required />
+    </label>
+
+    <label>
+        Category
+        <select name="category" id="category-select" required>
+            <option disabled selected>Loading categories...</option>
+        </select>
+    </label>
+
+    <label>
+        Servings
+        <input type="number" name="servings" min="1" required />
+    </label>
+
+    <label>
+        Gluten Free?
+        <input type="checkbox" name="gf" />
+    </label>
+
+    <label>
+        Vegan?
+        <input type="checkbox" name="vegan" />
+    </label>
+
+    <button type="submit" class="submit-btn">Submit Dish</button>
+</form>
+
+<div id="status" style="margin-top:2em;"></div>
+
+<script>
+    const form = document.getElementById('dish-form');
+    const categorySelect = document.getElementById('category-select');
+    const statusDiv = document.getElementById('status');
+
+    const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbz1zoU2bDG83YhjqooWrDr4DNgfAN3TvVQP6PAuOB8IvIifpgrOASmwyV05CrYi-qBb/exec'; // Replace with your deployed Apps Script URL
+
+    async function loadCategoryData() {
+        try {
+            const res = await fetch(ENDPOINT_URL);
+            const data = await res.json(); // { categories: [{ name, idealServings, currentServings }], timestamp }
+
+            categorySelect.innerHTML = '';
+
+            data.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.name;
+                option.textContent = `${cat.name} (${cat.currentServings}/${cat.idealServings})`;
+
+                const ratio = cat.currentServings / cat.idealServings;
+                let color = 'green';
+                if (ratio >= 1.1) color = 'red';
+                else if (ratio >= 0.8) color = 'yellow';
+                option.setAttribute('data-color', color);
+
+                categorySelect.appendChild(option);
+            });
+        } catch (err) {
+            console.error('Failed to load category metadata:', err);
+            categorySelect.innerHTML = '<option disabled>Error loading categories</option>';
+        }
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const payload = {
+            timestamp: new Date().toISOString(),
+            category: formData.get('category'),
+            dish: formData.get('dish'),
+            person: formData.get('person'),
+            email: formData.get('email'),
+            servings: parseInt(formData.get('servings')),
+            gf: formData.get('gf') ? true : false,
+            vegan: formData.get('vegan') ? true : false
+        };
+
+        try {
+            const res = await fetch(ENDPOINT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (res.ok) {
+                statusDiv.textContent = 'Submission successful! Thank you.';
+                form.reset();
+                await loadCategoryData();
+            } else {
+                statusDiv.textContent = 'Error submitting. Please try again.';
+            }
+        } catch (err) {
+            console.error('Submit failed:', err);
+            statusDiv.textContent = 'Network error. Try again later.';
+        }
+    });
+
+    loadCategoryData();
+</script>
 </body>
 </html>
