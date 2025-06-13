@@ -5,54 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wedding Potluck Signup</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('images/tile-food-bg.jpg'); /* Change this path as needed */
+            background-repeat: repeat;
+            background-size: auto;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4 py-8">
-<div class="bg-white shadow-xl rounded-xl w-full max-w-md p-6 sm:p-8">
-    <h1 class="text-2xl font-semibold text-center mb-6">Wedding Potluck Signup</h1>
+<body class="min-h-screen flex items-center justify-center px-4 py-8">
 
-    <form id="dish-form" class="space-y-5">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1" for="person">Your Name</label>
-            <input type="text" id="person" name="person" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
+<!-- Form Container with relative positioning -->
+<div class="relative w-full max-w-md">
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Your Email</label>
-            <input type="email" id="email" name="email" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1" for="dish">Dish Name</label>
-            <input type="text" id="dish" name="dish" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-            <div id="category-buttons" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-            <input type="hidden" name="category" id="category-hidden" required />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1" for="servings">Servings</label>
-            <input type="number" id="servings" name="servings" min="1" required class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-
-        <div class="flex items-center space-x-2">
-            <input type="checkbox" name="gf" id="gf" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-            <label for="gf" class="text-sm text-gray-700">Gluten Free?</label>
-        </div>
-
-        <div class="flex items-center space-x-2">
-            <input type="checkbox" name="vegan" id="vegan" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-            <label for="vegan" class="text-sm text-gray-700">Vegan?</label>
-        </div>
-
-        <button type="submit" class="w-full mt-4 bg-blue-600 text-white text-sm font-medium px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            Submit Dish
+    <!-- Splash Screen (positioned over the form only) -->
+    <div id="splash-screen" class="absolute inset-0 bg-white z-50 flex flex-col items-center justify-top text-center p-8 transition-opacity duration-500 rounded-xl shadow-xl">
+        <img src="images/cook-kirby-loading.gif" alt="Loading" class="w-58 h-48 mb-6" />
+        <p class="text-lg font-medium text-gray-700 mb-6">
+            Thank you for making a lasanga! Try not to make anything that's already been made
+        </p>
+        <button id="splash-ok-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Okay, got it!
         </button>
+    </div>
 
-        <div id="status" class="text-center mt-4 text-sm text-gray-600"></div>
-    </form>
+    <!-- Main Form -->
+    <div class="bg-white shadow-xl rounded-xl w-full p-6 sm:p-8">
+        <h1 class="text-2xl font-semibold text-center mb-6">Wedding Potluck Signup</h1>
+
+        <form id="dish-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="person">Your Name</label>
+                <input type="text" id="person" name="person" required placeholder="Spongebob Squarepants" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Your Email</label>
+                <input type="email" id="email" name="email" required placeholder="patrick.star@gmail.com" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <div id="category-buttons" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                <input type="hidden" name="category" id="category-hidden" required />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Other People are Bringing:</label>
+                <ul id="taken-dishes" class="list-disc list-inside text-sm text-gray-600 pl-2 space-y-1">
+                    <!-- Items will be inserted here -->
+                </ul>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="dish">Dish Name</label>
+                <input type="text" id="dish" name="dish" required placeholder="eg. Crabby Patty" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="servings">Servings</label>
+                <input type="number" id="servings" name="servings" min="1" required placeholder="eg. 20" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" name="gf" id="gf" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <label for="gf" class="text-sm text-gray-700">Gluten Free?</label>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" name="vegan" id="vegan" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                <label for="vegan" class="text-sm text-gray-700">Vegan?</label>
+            </div>
+
+            <button type="submit" class="w-full mt-4 bg-blue-600 text-white text-sm font-medium px-4 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Submit Dish
+            </button>
+
+            <div id="status" class="text-center mt-4 text-sm text-gray-600"></div>
+        </form>
+    </div>
 </div>
 
 <script src="formHandler.js"></script>

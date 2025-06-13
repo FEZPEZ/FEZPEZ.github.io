@@ -2,10 +2,12 @@ const form = document.getElementById('dish-form');
 const statusDiv = document.getElementById('status');
 const categoryButtonsContainer = document.getElementById('category-buttons');
 const categoryHiddenInput = document.getElementById('category-hidden');
+const takenDishesList = document.getElementById('taken-dishes');
 
 const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbz1zoU2bDG83YhjqooWrDr4DNgfAN3TvVQP6PAuOB8IvIifpgrOASmwyV05CrYi-qBb/exec';
 
-// Map serving ratio to color/message
+let allEntries = [];
+
 function getMessage(ratio) {
     if (ratio < 0.5) {
         return { text: "we need this!", color: "text-green-700", bg: "bg-green-100" };
@@ -18,12 +20,55 @@ function getMessage(ratio) {
     }
 }
 
+function updateTakenDishesList(categoryName, categoriesData) {
+    takenDishesList.innerHTML = '';
+
+    if (!categoryName || !categoriesData || !Array.isArray(categoriesData)) {
+        takenDishesList.innerHTML = '<li class="text-gray-500">Nothing yet...</li>';
+        return;
+    }
+
+    // Find the category object by name (case-insensitive)
+    const categoryObj = categoriesData.find(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
+
+    if (!categoryObj || !categoryObj.dishes || categoryObj.dishes.length === 0) {
+        takenDishesList.innerHTML = '<li class="text-gray-500">Nothing yet...</li>';
+        return;
+    }
+
+    categoryObj.dishes.forEach(dish => {
+        const tags = [];
+        if (dish.gf) tags.push('GF');
+        if (dish.vegan) tags.push('Vegan');
+
+        // Capitalize each word in the dish name
+        const titleCasedName = dish.name
+            .toLowerCase()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+        const displayName = titleCasedName + (tags.length > 0 ? ` (${tags.join(', ')})` : '');
+
+        const li = document.createElement('li');
+        li.textContent = displayName;
+        takenDishesList.appendChild(li);
+    });
+}
+
+
+
+
+
 async function loadCategoryData() {
     try {
         const res = await fetch(ENDPOINT_URL);
-        const data = await res.json(); // expects { categories: [...] }
+        const data = await res.json(); // expects { categories: [...], entries: [...] }
+
+        console.log(data);
 
         categoryButtonsContainer.innerHTML = '';
+        allEntries = data.entries || [];
 
         data.categories.forEach(cat => {
             const ratio = cat.idealServings ? cat.currentServings / cat.idealServings : 0;
@@ -38,13 +83,13 @@ async function loadCategoryData() {
             `;
 
             btn.addEventListener('click', () => {
-                // Set hidden field
                 categoryHiddenInput.value = cat.name;
 
-                // Visually mark the selected button
                 const allButtons = categoryButtonsContainer.querySelectorAll('button');
                 allButtons.forEach(b => b.classList.remove('ring', 'ring-blue-500'));
                 btn.classList.add('ring', 'ring-blue-500');
+
+                updateTakenDishesList(cat.name, data.categories);
             });
 
             categoryButtonsContainer.appendChild(btn);
@@ -59,7 +104,6 @@ async function loadCategoryData() {
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // If no category is selected
     if (!categoryHiddenInput.value) {
         statusDiv.textContent = 'Please select a category.';
         return;
@@ -73,8 +117,8 @@ form.addEventListener('submit', async (e) => {
         person: formData.get('person'),
         email: formData.get('email'),
         servings: parseInt(formData.get('servings')),
-        gf: formData.get('gf') ? true : false,
-        vegan: formData.get('vegan') ? true : false
+        gf: !!formData.get('gf'),
+        vegan: !!formData.get('vegan')
     };
 
     try {
@@ -90,7 +134,7 @@ form.addEventListener('submit', async (e) => {
             statusDiv.textContent = 'Submission successful! Thank you.';
             form.reset();
             categoryHiddenInput.value = '';
-            await loadCategoryData(); // Refresh button UI
+            await loadCategoryData(); // Refresh categories + entries
         } else {
             statusDiv.textContent = 'Error submitting. Please try again.';
         }
@@ -98,6 +142,29 @@ form.addEventListener('submit', async (e) => {
         console.error('Submit failed:', err);
         statusDiv.textContent = 'Network error. Try again later.';
     }
+});
+
+// Splash screen handling
+let categoriesLoaded = false;
+const splash = document.getElementById('splash-screen');
+const splashBtn = document.getElementById('splash-ok-btn');
+
+const originalLoadCategoryData = loadCategoryData;
+loadCategoryData = async () => {
+    await originalLoadCategoryData();
+    categoriesLoaded = true;
+};
+
+splashBtn.addEventListener('click', async () => {
+    splashBtn.disabled = true;
+    splashBtn.textContent = 'Loading...';
+
+    while (!categoriesLoaded) {
+        await new Promise(res => setTimeout(res, 300));
+    }
+
+    splash.classList.add('opacity-0');
+    setTimeout(() => splash.style.display = 'none', 500);
 });
 
 loadCategoryData();
