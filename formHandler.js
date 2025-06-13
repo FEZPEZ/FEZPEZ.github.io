@@ -6,21 +6,6 @@ const takenDishesList = document.getElementById('taken-dishes');
 
 const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbz1zoU2bDG83YhjqooWrDr4DNgfAN3TvVQP6PAuOB8IvIifpgrOASmwyV05CrYi-qBb/exec';
 
-// For the final explosion thing after submitting the form
-const overlay = document.getElementById('thank-you-overlay');
-const explosionGif = document.getElementById('explosion-gif');
-const hotFoodGif = document.getElementById('hot-food-gif');
-
-function showFinalGifs() {
-    overlay.style.display = 'block';
-    explosionGif.style.opacity = '1';
-    hotFoodGif.style.opacity = '0';
-
-    setTimeout(() => {
-        hotFoodGif.style.opacity = '1';
-    }, 1000);
-}
-
 let allEntries = [];
 
 function getMessage(ratio) {
@@ -58,7 +43,7 @@ function updateTakenDishesList(categoryName, categoriesData) {
         if (dish.vegan) tags.push('Vegan');
 
         // Capitalize each word in the dish name
-        const titleCasedName = dish.name
+        const titleCasedName = String(dish.name)
             .toLowerCase()
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -88,7 +73,7 @@ async function loadCategoryData() {
 
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `w-full flex justify-between items-center px-4 py-2 rounded border ${bg} hover:bg-opacity-80`;
+            btn.className = `category-button w-full flex justify-between items-center px-4 py-2 rounded border ${bg} hover:bg-opacity-80`;
             btn.innerHTML = `
                 <span class="font-medium">${cat.name}</span>
                 <span class="text-sm ${color}">${text}</span>
@@ -98,10 +83,19 @@ async function loadCategoryData() {
                 categoryHiddenInput.value = cat.name;
 
                 const allButtons = categoryButtonsContainer.querySelectorAll('button');
-                allButtons.forEach(b => b.classList.remove('ring', 'ring-blue-500'));
-                btn.classList.add('ring', 'ring-blue-500');
+                allButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
 
-                document.getElementById('dish').placeholder = `Your favorite ${cat.name.toLowerCase()}`;
+                const dishInput = document.getElementById('dish');
+                const servingsInput = document.getElementById('servings');
+
+                if (cat.name.toLowerCase() === 'the cupcakes') {
+                    servingsInput.value = 36;
+                    dishInput.placeholder = "You'll need to make 3 dozen!";
+                } else {
+                    servingsInput.value = '';
+                    dishInput.placeholder = `Your favorite ${cat.name.toLowerCase()}`;
+                }
 
                 updateTakenDishesList(cat.name, data.categories);
             });
@@ -124,10 +118,29 @@ form.addEventListener('submit', async (e) => {
     }
 
     const formData = new FormData(form);
+
+    const dishValue = String(formData.get('dish')).trim();
+    const servingsValue = parseInt(formData.get('servings'), 10);
+
+    // Validate dish name: only letters and spaces
+    if (!/^[a-zA-Z]/.test(dishValue)) {
+        statusDiv.textContent = 'Dish name must start with a letter.';
+        return;
+    }
+
+    if (isNaN(servingsValue) || servingsValue < 1 || servingsValue > 50) {
+        statusDiv.textContent = 'Serving size must be between 1 and 50.';
+        return;
+    }
+
+
+    statusDiv.textContent = '';
+
+
     const payload = {
         timestamp: new Date().toISOString(),
         category: categoryHiddenInput.value,
-        dish: formData.get('dish'),
+        dish: String(formData.get('dish')),
         person: formData.get('person'),
         email: formData.get('email'),
         servings: parseInt(formData.get('servings')),

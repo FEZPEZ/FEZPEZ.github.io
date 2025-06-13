@@ -43,3 +43,13 @@ body {
     margin-bottom: 20px;
     display: none;
 }
+
+.category-button.selected {
+    background-color: #374151 !important; /* hex for gray-700 */
+    color: white !important;
+    border-color: black !important;
+}
+
+.category-button.selected span.text-sm {
+    color: white !important;
+}
