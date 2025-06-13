@@ -39,6 +39,7 @@ function updateTakenDishesList(categoryName, categoriesData) {
     categoryObj.dishes.forEach(dish => {
         const tags = [];
         if (dish.gf) tags.push('GF');
+        if (dish.df) tags.push('DF');
         if (dish.vegan) tags.push('Vegan');
 
         // Capitalize each word in the dish name
@@ -55,8 +56,6 @@ function updateTakenDishesList(categoryName, categoriesData) {
         takenDishesList.appendChild(li);
     });
 }
-
-
 
 
 
@@ -89,6 +88,8 @@ async function loadCategoryData() {
                 allButtons.forEach(b => b.classList.remove('ring', 'ring-blue-500'));
                 btn.classList.add('ring', 'ring-blue-500');
 
+                document.getElementById('dish').placeholder = `Your favorite ${cat.name.toLowerCase()}`;
+
                 updateTakenDishesList(cat.name, data.categories);
             });
 
@@ -118,6 +119,7 @@ form.addEventListener('submit', async (e) => {
         email: formData.get('email'),
         servings: parseInt(formData.get('servings')),
         gf: !!formData.get('gf'),
+        df: !!formData.get('df'),
         vegan: !!formData.get('vegan')
     };
 
@@ -131,8 +133,98 @@ form.addEventListener('submit', async (e) => {
         });
 
         if (res.ok) {
-            statusDiv.textContent = 'Submission successful! Thank you.';
-            form.reset();
+            document.getElementById('form-wrapper').style.display = 'none';
+            statusDiv.textContent = '';
+
+            // Create video container
+            const videoContainer = document.createElement('div');
+            videoContainer.style.position = 'fixed';
+            videoContainer.style.top = '50%';
+            videoContainer.style.left = '50%';
+            videoContainer.style.zIndex = '1000';
+            videoContainer.style.width = '10vw';
+            videoContainer.style.maxWidth = '720px';
+            videoContainer.style.aspectRatio = '16 / 9';
+            videoContainer.style.transform = 'translate(-50%, -50%) rotate(-20deg)';
+            videoContainer.innerHTML = `
+                <iframe width="100%" height="100%" 
+                    src="https://www.youtube.com/embed/IMoGdZLIRn8?autoplay=1&controls=1" 
+                    title="YouTube video player" frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                </iframe>
+            `;
+
+            // Create overlay container to hold GIF and text, positioned absolutely inside videoContainer
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '50%';
+            overlay.style.left = '50%';
+            overlay.style.transform = 'translate(-50%, -50%)';
+            overlay.style.zIndex = '1010';
+            overlay.style.display = 'flex';
+            overlay.style.flexDirection = 'column';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.pointerEvents = 'none'; // so clicks pass through
+
+            // Create GIF element (centered)
+            const gif = document.createElement('img');
+            gif.src = 'images/explosion(noloop).gif'; // example GIF, replace as needed
+            gif.style.width = '150px';
+            gif.style.height = '150px';
+            gif.style.marginBottom = '-20px';
+
+            // Create the "Thank You!" text element
+            const thankYouText = document.createElement('div');
+            thankYouText.textContent = 'Thank You!';
+            thankYouText.style.fontFamily = "'Press Start 2P', cursive, monospace"; // 8-bit pixel font style
+            thankYouText.style.fontSize = '2rem';
+            thankYouText.style.fontWeight = 'bold';
+            thankYouText.style.userSelect = 'none';
+            thankYouText.style.animation = 'rainbow 1s linear infinite';
+            thankYouText.style.transition = 'opacity 1s ease';
+
+            // Append gif and text to overlay, overlay to videoContainer
+            overlay.appendChild(gif);
+            overlay.appendChild(thankYouText);
+            videoContainer.appendChild(overlay);
+
+            document.body.appendChild(videoContainer);
+
+            // Insert font link for 8-bit font if not already included
+            if (!document.getElementById('pixel-font-link')) {
+                const link = document.createElement('link');
+                link.id = 'pixel-font-link';
+                link.rel = 'stylesheet';
+                link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap';
+                document.head.appendChild(link);
+            }
+
+            // Define rainbow animation keyframes only once
+            if (!document.getElementById('rainbow-style')) {
+                const style = document.createElement('style');
+                style.id = 'rainbow-style';
+                style.textContent = `
+                @keyframes rainbow {
+                    0% { color: red; }
+                    15% { color: orange; }
+                    30% { color: yellow; }
+                    45% { color: green; }
+                    60% { color: blue; }
+                    75% { color: indigo; }
+                    90% { color: violet; }
+                    100% { color: red; }
+                }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Fade out the text after 2 seconds
+            setTimeout(() => {
+                thankYouText.style.opacity = '0';
+            }, 3000);
+
             categoryHiddenInput.value = '';
             await loadCategoryData(); // Refresh categories + entries
         } else {
@@ -143,6 +235,8 @@ form.addEventListener('submit', async (e) => {
         statusDiv.textContent = 'Network error. Try again later.';
     }
 });
+
+
 
 // Splash screen handling
 let categoriesLoaded = false;
