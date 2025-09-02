@@ -4,9 +4,18 @@
         <loc>https://isaacbeals.com/</loc>
     </url>
     <url>
-        <loc>https://isaacbeals.com/article-1/</loc>
+        <loc>https://isaacbeals.com/blog/</loc>
     </url>
     <url>
-        <loc>https://isaacbeals.com/article-2/</loc>
+        <loc>https://isaacbeals.com/blog/article-1/</loc>
+    </url>
+    <url>
+        <loc>https://isaacbeals.com/blog/article-2/</loc>
+    </url>
+    <url>
+        <loc>https://isaacbeals.com/about/</loc>
+    </url>
+    <url>
+        <loc>https://isaacbeals.com/puzzles/</loc>
     </url>
 </urlset>
