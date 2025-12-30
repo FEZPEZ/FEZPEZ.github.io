@@ -1,0 +1,276 @@
+<header class="site-header" role="banner" id="siteHeader">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+  @font-face {
+    font-family: 'Ithaca';
+    src: url('{{ "/assets/fonts/ithaca.ttf" | relative_url }}') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  /* Site title */
+  .site-title span {
+    font-family: 'Ithaca', monospace;
+    font-weight: bold;
+    font-size: 50px;
+    color: #444444;
+    letter-spacing: 1px;
+  }
+
+  /* Page links/buttons */
+  .page-link span,
+  .explode-link span {
+    font-family: 'Ithaca', monospace;
+    font-size: 26px;
+    color: #8c8c8c; /* medium gray */
+    transition: color 0.2s ease-in-out;
+  }
+
+  .page-link span:hover,
+  .explode-link span:hover {
+    color: #bfbfbf; /* lighter gray on hover */
+  }
+  .explode-link span {
+  user-select: none;
+  -webkit-user-select: none; /* Safari/Chrome */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE/Edge */
+}
+  .page-link.explode-link {
+  cursor: pointer;
+}
+
+</style>
+
+  <div class="wrapper">
+    {%- assign default_paths = site.pages | map: "path" -%}
+    {%- assign page_paths = site.header_pages | default: default_paths -%}
+    <a class="site-title" rel="author" href="{{ "/" | relative_url }}"><span>{{ site.title | escape }}</span></a>
+
+    {%- if page_paths -%}
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          {%- for path in page_paths -%}
+            {%- assign my_page = site.pages | where: "path", path | first -%}
+            {%- if my_page.title -%}
+            <a class="page-link" href="{{ my_page.url | relative_url }}"><span>{{ my_page.title | escape }}</span></a>
+            {%- endif -%}
+          {%- endfor -%}
+          <a class="page-link explode-link"><span>Explode</span></a>
+        </div>
+      </nav>
+    {%- endif -%}
+  </div>
+
+  <canvas id="explodeCanvas"></canvas>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+(function() {
+  const { Engine, World, Bodies, Body, Composite } = Matter;
+  const header = document.getElementById("siteHeader");
+  const canvas = document.getElementById("explodeCanvas");
+  const ctx = canvas.getContext("2d");
+
+resizeViewport();
+  canvas.style.position = "fixed";
+  canvas.style.top = 0;
+  canvas.style.left = 0;
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = 999;
+
+  const explodeBtn = header.querySelector(".explode-link");
+  let engine, exploded = false;
+
+  // --- CONSTANTS ---
+  const FORCE_MIN = 0.03;
+  const FORCE_MAX = 0.08;
+  const CX_MIN_RATIO = 0.3;  // % of canvas width
+  const CX_MAX_RATIO = 0.7;
+  const CY_MIN_RATIO = 0.3;  // % of canvas height
+  const CY_MAX_RATIO = 0.7;
+
+  // Store original text & styles (skip explode button)
+  const originalChars = [];
+  header.querySelectorAll("span").forEach(span => {
+    if (span.parentElement.closest(".explode-link")) return;
+    originalChars.push({
+      el: span,
+      text: span.textContent,
+      font: window.getComputedStyle(span).font,
+      color: window.getComputedStyle(span).color
+    });
+  });
+
+
+  function measureCharacters(container) {
+    const chars = [];
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.parentElement || node.parentElement.closest(".explode-link")) continue;
+      const text = node.textContent;
+      for (let i = 0; i < text.length; i++) {
+        const range = document.createRange();
+        range.setStart(node, i);
+        range.setEnd(node, i + 1);
+        const rect = range.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          const parent = node.parentElement;
+          chars.push({
+            char: text[i],
+            x: rect.left + rect.width/2 + window.scrollX,
+            y: rect.top + rect.height/2 + window.scrollY,
+            font: window.getComputedStyle(parent).font,
+            color: window.getComputedStyle(parent).color,
+            el: parent
+          });
+        }
+      }
+    }
+    return chars;
+  }
+
+  function explodeText() {
+    if (exploded) return;
+    exploded = true;
+    
+    resizeViewport();
+
+    const chars = measureCharacters(header);
+    chars.forEach(c => { if (c.el) c.el.style.visibility = "hidden"; });
+    
+    document.querySelectorAll('.page-link:not(.explode-link)').forEach(link => {
+    link.style.pointerEvents = 'none';
+  });
+
+    engine = Engine.create();
+    
+
+    const w = canvas.width, h = canvas.height;
+
+    // walls
+    World.add(engine.world, [
+      Bodies.rectangle(w/2, -50, w, 100, { isStatic: true }),
+      Bodies.rectangle(w/2, h+50, w, 100, { isStatic: true }),
+      Bodies.rectangle(-50, h/2, 100, h, { isStatic: true }),
+      Bodies.rectangle(w+50, h/2, 100, h, { isStatic: true })
+    ]);
+
+    // Random explosion center and force
+    const cx = CX_MIN_RATIO * w + Math.random() * (CX_MAX_RATIO - CX_MIN_RATIO) * w;
+    const cy = CY_MIN_RATIO * h + Math.random() * (CY_MAX_RATIO - CY_MIN_RATIO) * h;
+    const force = FORCE_MIN + Math.random() * (FORCE_MAX - FORCE_MIN);
+
+    chars.forEach(p => {
+      if (p.char.trim() === "") return;
+      const b = Bodies.circle(p.x, p.y, 8, { restitution: 0.4, label: p.char });
+      const style = window.getComputedStyle(p.el);
+      b.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      b.color = style.color;
+      World.add(engine.world, b);
+
+      const dx = b.position.x - cx;
+      const dy = b.position.y - cy;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      Body.applyForce(b, b.position, { x: (dx/len) * force, y: (dy/len) * force });
+    });
+
+    let debugFrame = 0;
+const DEBUG_EVERY_N_FRAMES = 2; // ~30 Hz at 60fps
+
+(function update() {
+  if (!exploded) return;
+
+  Engine.update(engine, 1000 / 60);
+  ctx.clearRect(0, 0, w, h);
+
+  Composite.allBodies(engine.world).forEach(b => {
+    if (b.label && b.label.length === 1) {
+
+      const radius = 8;
+
+      // --- MANUAL EDGE BOUNCE (still corrupts physics) ---
+      if (b.position.x - radius < 0) {
+        b.position.x = radius;
+        b.velocity.x *= -1;
+      }
+      if (b.position.x + radius > w) {
+        b.position.x = w - radius;
+        b.velocity.x *= -1;
+      }
+      if (b.position.y - radius < 0) {
+        b.position.y = radius;
+        b.velocity.y *= -1;
+      }
+      if (b.position.y + radius > h) {
+        b.position.y = h - radius;
+        b.velocity.y *= -1;
+      }
+
+      // ---- RENDER ----
+      ctx.save();
+      ctx.translate(b.position.x, b.position.y);
+      ctx.rotate(b.angle);
+      ctx.fillStyle = b.color || "#fff";
+      ctx.font = b.font || "20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(b.label, 0, 0);
+      ctx.restore();
+    }
+  });
+
+  requestAnimationFrame(update);
+})();
+
+  }
+
+  function resetText() {
+    exploded = false;
+    if (engine) engine = null;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    originalChars.forEach(c => {
+      c.el.style.visibility = "visible";
+      c.el.textContent = c.text;
+      c.el.style.font = c.font;
+      c.el.style.color = c.color;
+    });
+    
+    document.querySelectorAll('.page-link:not(.explode-link)').forEach(link => {
+    link.style.pointerEvents = 'auto';
+  });
+
+    explodeBtn.querySelector("span").textContent = "Explode";
+  }
+
+  explodeBtn.addEventListener("click", () => {
+    if (!exploded) {
+      explodeBtn.querySelector("span").textContent = "Uh Oh";
+      explodeText();
+    } else {
+      resetText();
+    }
+  });
+
+})();
+
+function resizeViewport() {
+const canvas = document.getElementById("explodeCanvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+</script>
